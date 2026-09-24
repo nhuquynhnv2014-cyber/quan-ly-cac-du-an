@@ -9,13 +9,21 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('projects-grid');
     const modal = document.getElementById('add-modal');
+    const modalTitle = document.getElementById('modal-title');
     const addBtn = document.getElementById('add-project-btn');
     const closeBtn = document.querySelector('.close-btn');
     const form = document.getElementById('add-form');
     const submitBtn = document.getElementById('submit-btn');
 
-    // Mở Modal
+    let allProjects = [];
+    let editingProjectId = null;
+
+    // Mở Modal Thêm mới
     addBtn.addEventListener('click', () => {
+        editingProjectId = null;
+        modalTitle.innerText = 'Thêm Dự Án Mới';
+        form.reset();
+        document.getElementById('p-color').value = '#4f46e5';
         modal.classList.add('show');
     });
 
@@ -91,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div class="card-header">
                     <h2 class="project-name">${project.name}</h2>
+                    <div class="card-actions">
+                        <button class="action-btn edit-btn" data-id="${project.id}" title="Chỉnh sửa"><i class='bx bx-edit'></i></button>
+                        <button class="action-btn delete-btn" data-id="${project.id}" title="Xóa"><i class='bx bx-trash'></i></button>
+                    </div>
                 </div>
                 <p class="project-desc">${project.description || ''}</p>
                 <div class="tags">
@@ -102,6 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             grid.appendChild(card);
+        });
+
+        // Gắn sự kiện cho các nút Sửa/Xóa
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => handleEdit(e.currentTarget.dataset.id));
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => handleDelete(e.currentTarget.dataset.id));
         });
     };
 
@@ -115,14 +136,52 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Lỗi tải dữ liệu:", error);
             grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: #ef4444;">Lỗi khi tải dữ liệu từ Supabase. Vui lòng kiểm tra lại cấu hình Database.</p>';
         } else {
+            allProjects = data;
             renderProjects(data);
+        }
+    };
+
+    // Hàm xử lý khi bấm Sửa
+    const handleEdit = (id) => {
+        const project = allProjects.find(p => p.id === id);
+        if (!project) return;
+
+        editingProjectId = id;
+        modalTitle.innerText = 'Sửa Dự Án';
+
+        document.getElementById('p-name').value = project.name || '';
+        document.getElementById('p-desc').value = project.description || '';
+        document.getElementById('p-color').value = project.color || '#4f46e5';
+        document.getElementById('p-domain').value = project.domain || '';
+        document.getElementById('p-github').value = project.github || '';
+        document.getElementById('p-vercel').value = project.vercel || '';
+        document.getElementById('p-supabase').value = project.supabase || '';
+        document.getElementById('p-other').value = project.other_link || '';
+        document.getElementById('p-tags').value = project.tags ? project.tags.join(', ') : '';
+
+        modal.classList.add('show');
+    };
+
+    // Hàm xử lý khi bấm Xóa
+    const handleDelete = async (id) => {
+        if (!confirm('Bạn có chắc chắn muốn xóa dự án này không? Hành động này không thể hoàn tác.')) return;
+
+        const { error } = await supabase
+            .from('projects')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            alert('Lỗi khi xóa: ' + error.message);
+        } else {
+            fetchProjects();
         }
     };
 
     // Load initial data
     fetchProjects();
 
-    // Xử lý Thêm dự án
+    // Xử lý Thêm / Sửa dự án
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -132,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawTags = document.getElementById('p-tags').value;
         const tags = rawTags ? rawTags.split(',').map(t => t.trim()).filter(t => t) : [];
 
-        const newProject = {
+        const projectData = {
             name: document.getElementById('p-name').value,
             description: document.getElementById('p-desc').value,
             color: document.getElementById('p-color').value,
@@ -140,12 +199,25 @@ document.addEventListener('DOMContentLoaded', () => {
             github: document.getElementById('p-github').value || null,
             vercel: document.getElementById('p-vercel').value || null,
             supabase: document.getElementById('p-supabase').value || null,
+            other_link: document.getElementById('p-other').value || null,
             tags: tags
         };
 
-        const { error } = await supabase
-            .from('projects')
-            .insert([newProject]);
+        let error;
+        if (editingProjectId) {
+            // Cập nhật
+            const response = await supabase
+                .from('projects')
+                .update(projectData)
+                .eq('id', editingProjectId);
+            error = response.error;
+        } else {
+            // Thêm mới
+            const response = await supabase
+                .from('projects')
+                .insert([projectData]);
+            error = response.error;
+        }
 
         submitBtn.disabled = false;
         submitBtn.innerText = 'Lưu Dự Án';
@@ -155,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             form.reset();
             modal.classList.remove('show');
+            editingProjectId = null;
             // Tải lại danh sách
             fetchProjects();
         }
