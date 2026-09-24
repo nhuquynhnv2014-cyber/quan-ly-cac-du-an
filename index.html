@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Ứng dụng | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <main class="container">
+        <header class="header">
+            <h1>Workspace <span>Projects</span></h1>
+            <p>Trạm điều khiển trung tâm cho tất cả các dự án của bạn</p>
+            <button id="add-project-btn" class="add-btn"><i class='bx bx-plus'></i> Thêm Dự Án</button>
+        </header>
+
+        <div id="projects-grid" class="projects-grid">
+            <p style="text-align:center; grid-column: 1/-1; color: var(--text-muted);">Đang tải dữ liệu từ Supabase...</p>
+        </div>
+    </main>
+
+    <!-- Modal Thêm Dự Án -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Thêm Dự Án Mới</h2>
+            <form id="add-form">
+                <div class="form-group">
+                    <label>Tên Dự Án (*)</label>
+                    <input type="text" id="p-name" required placeholder="VD: BizConnect">
+                </div>
+                <div class="form-group">
+                    <label>Mô Tả</label>
+                    <textarea id="p-desc" placeholder="Mô tả ngắn gọn..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Màu Chủ Đạo</label>
+                    <input type="color" id="p-color" value="#4f46e5">
+                </div>
+                
+                <h3 style="margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1rem;">Liên kết</h3>
+                
+                <div class="form-group">
+                    <label>Domain / Link Web</label>
+                    <input type="url" id="p-domain" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Github Repository</label>
+                    <input type="url" id="p-github" placeholder="https://github.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Vercel URL</label>
+                    <input type="url" id="p-vercel" placeholder="https://vercel.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Supabase URL</label>
+                    <input type="url" id="p-supabase" placeholder="https://supabase.com/...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tags (Cách nhau bằng dấu phẩy)</label>
+                    <input type="text" id="p-tags" placeholder="React, Nodejs, Supabase">
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submit-btn">Lưu Dự Án</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sử dụng Vite / Module -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
